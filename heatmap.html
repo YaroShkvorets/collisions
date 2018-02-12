@@ -26,36 +26,7 @@
 <body>
 <div id='app' class='col12 contain clip'>
 <div id='map'></div>
-<div id='legendbtn' class='pin-right pad2 '>
-  <a href='#legend' class='button' onclick="document.getElementById('legendbtn').style.display='none'">Legend</a>
-</div>
-<div id='legend' class='col4 pad2 row7 pin-right offcanvas-right '>
-  <a href='#' class=' pad1 icon close button fr' onclick="document.getElementById('legendbtn').style.display='block'"></a>
-  <div class='clearfix' ></div>
-  <form class = 'fill-lighten3 pad2'>
-    <h5>Year</h5>
-    <div class='rounded-toggle inline'>
-      <input type='radio' name='year' id='year2014' value='year2014' checked='checked'>
-      <label for='year2014' >2014</label>
-      <input type='radio' name='year' id='year2015' value='year2015'>
-      <label for='year2015' >2015</label>
-      <input type='radio' name='year' id='year2016' value='year2016'>
-      <label for='year2016' >2016</label>
-      <input type='radio' name='year' id='yearAll' value='yearAll'>
-      <label for='yearAll' >All</label>
-    </div><br><br>
-    <h5>Collisions involving</h5>
-    <div class='rounded-toggle inline'>
-      <input type='radio' name='collisions' id='colPeds' value='colPeds' checked='checked'>
-      <label for='colPeds' >Pedestrians</label>
-      <input type='radio' name='collisions' id='colBikes' value='colBikes'>
-      <label for='colBikes' >Cyclists</label>
-      <input type='radio' name='collisions' id='colAll' value='colAll'>
-      <label for='colAll' >Overall</label>
-    </div>
 
-  </form>
-</div>
 <div class="loader loader--style1" title="0" id="loader">
         <svg version="1.1" id="loader-1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="40px" height="40px" viewBox="0 0 40 40" enable-background="new 0 0 40 40" xml:space="preserve">
             <path opacity="0.2" fill="#000" d="M20.201,5.169c-8.254,0-14.946,6.692-14.946,14.946c0,8.255,6.692,14.946,14.946,14.946
@@ -68,13 +39,12 @@
         </svg>
     </div>
 </div>
-</div>
 
 <script>
 const years = [
-    {id:"year2014", url: 'data/collisionsbylocation2014.geojson', year:2014},
-    {id:"year2015", url: 'data/collisionsbylocation2015.geojson', year:2015},
-    {id:"year2016", url: 'data/collisionsbylocation2016.geojson', year:2016}
+    {id:"year2014", url: 'data/collisionsbylocation2014.geojson', year:2014, color:'#0099cc'}/*,
+    {id:"year2015", url: 'data/2014collisionsfinal.geojson', year:2015, color:'#1C7C54'},
+    {id:"year2016", url: 'data/2014collisionsfinal.geojson', year:2016, color:'#F0C808'}*/
   ];
 
 
@@ -85,7 +55,6 @@ const map = new mapboxgl.Map({
     style: 'mapbox://styles/mapbox/dark-v8',
     center: [-75.697927,45.417431],
     zoom: 13,
-    //pitch: 40,
     minZoom: 10,
     maxZoom: 17,
     maxBounds: [[-76.385193,44.963826],[-75.011902,45.614998]]
@@ -99,23 +68,23 @@ map.once('style.load', function () {
 
     map.on('mousemove', function(e) {
         var features = map.queryRenderedFeatures(e.point, {
-                    layers: years.map(y=>y.id)
+                    layers: years.map(y=>'points-'+y.id)
                 });
         map.getCanvas().style.cursor = (features.length) ? 'pointer' : '';
     });
 
     map.on('click', function(e) {
       var features = map.queryRenderedFeatures(e.point, {
-                  layers: years.map(y=>y.id)
+                  layers: years.map(y=>'points-'+y.id)
               });
       if (!features.length) {
           return;
       }
       var props = features[0].properties;
-      let popup ='<h3>'+props.location+'</h3><hr>'
-      popup+='Total: '+props.col_total+'<br>'
-      popup+='Pedestrians: '+props.col_peds+'<br>'
-      popup+='Byciclists: '+props.col_bikes+'<br>'
+      let popup ='<h3>'+props.LOCATION+'</h3><hr>'
+      popup+='Total: '+props.TOTAL_COLLISIONS+'<br>'
+      popup+='Pedestrians: '+props.PEDESTRIANS_IN_TOTAL+'<br>'
+      popup+='Byciclists: '+props.BICYLCLES_IN_TOTAL+'<br>'
 
       var pop = new mapboxgl.Popup()
       .setLngLat(e.lngLat)
@@ -135,44 +104,101 @@ function init() {
     });
 
     map.addLayer({
-       'id': layer.id,
-       'type': 'circle',
-       'source': layer.id,
-       'paint': {
-          "circle-color": [
-              "interpolate",
-              ["linear"],
-              ["get", "col_peds"],
-              1, "yellow",
-              6, "red"
-          ],
-          'circle-radius': [
-            "interpolate",
-            ["linear"],
-            ["zoom"],
-            7, [
-                "interpolate",
-                ["linear"],
-                ["get", "col_peds"],
-                1, 1,
-                6, 4
-            ],
-            16, [
-                "interpolate",
-                ["linear"],
-                ["get", "col_peds"],
-                1, 5,
-                30, 200
-            ]
-          ],
-          'circle-opacity': 0.8,
-          'circle-blur': 0.3,
-
-       },
-       'filter': ['>=', 'col_peds', 1]
+      "id": layer.id,
+      "type": "heatmap",
+      'source': layer.id,
+      maxzoom: 15,
+      paint: {
+        // increase weight as diameter breast height increases
+        /*'heatmap-weight': {
+          property: 'dbh',
+          type: 'exponential',
+          stops: [
+            [1, 0],
+            [62, 1]
+          ]
+        },*/
+        // increase intensity as zoom level increases
+        'heatmap-intensity': {
+          stops: [
+            [11, 1],
+            [15, 3]
+          ]
+        },
+        // assign color values be applied to points depending on their density
+        "heatmap-color": [
+             "interpolate",
+             ["linear"],
+             ["heatmap-density"],
+             0, "rgba(33,102,172,0)",
+             0.2, "rgb(103,169,207)",
+             0.4, "rgb(209,229,240)",
+             0.6, "rgb(253,219,199)",
+             0.8, "rgb(239,138,98)",
+             1, "rgb(178,24,43)"
+         ],
+        // increase radius as zoom increases
+        'heatmap-radius': {
+          stops: [
+            [11, 15],
+            [15, 20]
+          ]
+        },
+        // decrease opacity to transition into the circle layer
+        'heatmap-opacity': {
+          default: 1,
+          stops: [
+            [14, 1],
+            [15, 0]
+          ]
+        },
+      }
     }, 'waterway-label');
 
-  })
+    map.addLayer({
+      id: 'points-'+layer.id,
+      type: 'circle',
+      source: layer.id,
+      minzoom: 14,
+      paint: {
+        // increase the radius of the circle as the zoom level and dbh value increases
+        /*'circle-radius': {
+          property: 'dbh',
+          type: 'exponential',
+          stops: [
+            [{ zoom: 15, value: 1 }, 5],
+            [{ zoom: 15, value: 62 }, 10],
+            [{ zoom: 22, value: 1 }, 20],
+            [{ zoom: 22, value: 62 }, 50],
+          ]
+        },
+        'circle-color': {
+          property: 'dbh',
+          type: 'exponential',
+          stops: [
+            [0, 'rgba(236,222,239,0)'],
+            [10, 'rgb(236,222,239)'],
+            [20, 'rgb(208,209,230)'],
+            [30, 'rgb(166,189,219)'],
+            [40, 'rgb(103,169,207)'],
+            [50, 'rgb(28,144,153)'],
+            [60, 'rgb(1,108,89)']
+          ]
+        },*/
+        'circle-stroke-color': 'white',
+        'circle-stroke-width': 1,
+        'circle-opacity': {
+          stops: [
+            [14, 0],
+            [15, 1]
+          ]
+        }
+      }
+    }, 'waterway-label');
+    //document.getElementById(layer.id+'-label').innerHTML = '<span style="display: inline-block;width:50px; height:8px;background-color: '+layer.color+'"></span>&nbsp;'+layer.name;
+  });
+
+
 }
 
 
