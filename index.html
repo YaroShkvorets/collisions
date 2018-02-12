@@ -3,13 +3,11 @@
 <head>
     <meta charset='utf-8' />
     <title>Ottawa cycling stress map</title>
-    <meta name='viewport' content='initial-scale=1,maximum-scale=1,user-scalable=no' />
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.css' rel='stylesheet' />
     <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
     <style>
         body { margin:0; padding:0; }
-        #app { position:absolute; top:0; right:0; bottom:0; left:0; }
         #map { position:absolute; top:0; bottom:0; width:100%; }
         .loader {
             margin: 0 0 0 0 ;
@@ -24,15 +22,9 @@
     </style>
 </head>
 <body>
-<div id='app' class='col12 contain clip'>
 <div id='map'></div>
-<div id='legendbtn' class='pin-right pad2 '>
-  <a href='#legend' class='button' onclick="document.getElementById('legendbtn').style.display='none'">Legend</a>
-</div>
-<div id='legend' class='col4 pad2 row7 pin-right offcanvas-right '>
-  <a href='#' class=' pad1 icon close button fr' onclick="document.getElementById('legendbtn').style.display='block'"></a>
-  <div class='clearfix' ></div>
-  <form class = 'fill-lighten3 pad2'>
+<div class = 'fill-lighten3 col3 pad1 row4 pin-right'>
+  <form>
     <h5>Year</h5>
     <div class='rounded-toggle inline'>
       <input type='radio' name='year' id='year2014' value='year2014' checked='checked'>
@@ -46,12 +38,12 @@
     </div><br><br>
     <h5>Collisions involving</h5>
     <div class='rounded-toggle inline'>
-      <input type='radio' name='collisions' id='colPeds' value='colPeds' checked='checked'>
-      <label for='colPeds' >Pedestrians</label>
-      <input type='radio' name='collisions' id='colBikes' value='colBikes'>
-      <label for='colBikes' >Cyclists</label>
-      <input type='radio' name='collisions' id='colAll' value='colAll'>
-      <label for='colAll' >Overall</label>
+      <input type='radio' name='collisions' id='col_peds' value='col_peds' checked='checked'>
+      <label for='col_peds' >Pedestrians</label>
+      <input type='radio' name='collisions' id='col_bikes' value='col_bikes'>
+      <label for='col_bikes' >Cyclists</label>
+      <input type='radio' name='collisions' id='col_total' value='col_total'>
+      <label for='col_total' >Drivers</label>
     </div>
 
   </form>
@@ -67,7 +59,6 @@
             </path>
         </svg>
     </div>
-</div>
 </div>
 
 <script>
@@ -112,10 +103,10 @@ map.once('style.load', function () {
           return;
       }
       var props = features[0].properties;
-      let popup ='<h3>'+props.location+'</h3><hr>'
-      popup+='Total: '+props.col_total+'<br>'
+      let popup ='<h3>Collisions involving</h3><hr>'
+      popup+='Drivers: '+props.col_total+'<br>'
       popup+='Pedestrians: '+props.col_peds+'<br>'
-      popup+='Byciclists: '+props.col_bikes+'<br>'
+      popup+='Cyclists: '+props.col_bikes+'<br>'
 
       var pop = new mapboxgl.Popup()
       .setLngLat(e.lngLat)
@@ -150,14 +141,14 @@ function init() {
             "interpolate",
             ["linear"],
             ["zoom"],
-            7, [
+            10, [
                 "interpolate",
                 ["linear"],
                 ["get", "col_peds"],
                 1, 1,
-                6, 4
+                30, 4
             ],
-            16, [
+            17, [
                 "interpolate",
                 ["linear"],
                 ["get", "col_peds"],
@@ -171,10 +162,43 @@ function init() {
        },
        'filter': ['>=', 'col_peds', 1]
     }, 'waterway-label');
-
+    map.setLayoutProperty(layer.id, 'visibility', 'none');
   })
+  map.setLayoutProperty(years[0].id, 'visibility', 'visible');
 }
 
+
+function toggleLayer (checkbox) {
+  years.forEach(function (layer, i) {
+    map.setLayoutProperty(layer.id, 'visibility', checkbox.currentTarget.id==layer.id?'visible':'none');
+  });
+}
+
+function toggleFilters (checkbox) {
+  years.forEach(function (layer, i) {
+    const filter = map.getFilter(layer.id)
+    if(filter.length) filter[1]=checkbox.currentTarget.id
+    map.setFilter(layer.id, filter)
+
+    const color = map.getPaintProperty(layer.id, 'circle-color')
+    color[2][1] = checkbox.currentTarget.id
+    map.setPaintProperty(layer.id, 'circle-color', color)
+
+    const radius = map.getPaintProperty(layer.id, 'circle-radius')
+    radius[4][2][1] = checkbox.currentTarget.id
+    radius[6][2][1] = checkbox.currentTarget.id
+    map.setPaintProperty(layer.id, 'circle-radius', radius)
+  });
+}
+
+document.getElementById('year2014').onclick = toggleLayer
+document.getElementById('year2015').onclick = toggleLayer
+document.getElementById('year2016').onclick = toggleLayer
+document.getElementById('yearAll').onclick = toggleLayer
+
+document.getElementById('col_peds').onclick = toggleFilters
+document.getElementById('col_total').onclick = toggleFilters
+document.getElementById('col_bikes').onclick = toggleFilters
 
 
 map.on('load', function(e) {
