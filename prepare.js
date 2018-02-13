@@ -33,8 +33,8 @@ for (let i in inFiles){
     }
     else{
       obj.properties.col_total+=props.col_total
-      obj.properties.col_total+=props.col_peds
-      obj.properties.col_total+=props.col_bikes
+      obj.properties.col_peds+=props.col_peds
+      obj.properties.col_bikes+=props.col_bikes
     }
 
   }
