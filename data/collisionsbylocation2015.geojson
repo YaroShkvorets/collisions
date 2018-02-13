@@ -1,7 +1,7 @@
 {
 "type": "FeatureCollection",
 "features": [
-{"type":"Feature","properties":{"Location":"210 W OF MERIVALE RD @ WEST HUNT CLUB RD (0004688)","col_total":9,"col_peds":0,"col_bikes":1},"geometry":{"type":"Point","coordinates":[-75.726437,45.333794]}},
+{"type":"Feature","properties":{"Location":"210 W OF MERIVALE RD @ WEST HUNT CLUB RD (0004688)","col_total":15612,"col_peds":0,"col_bikes":1},"geometry":{"type":"Point","coordinates":[-75.726437,45.333794]}},
 {"type":"Feature","properties":{"Location":"225 E OF RIVERSIDE DR / T & T SC @ HUNT CLUB RD (0013516)","col_total":2,"col_peds":0,"col_bikes":0},"geometry":{"type":"Point","coordinates":[-75.690637,45.335584]}},
 {"type":"Feature","properties":{"Location":"240 S OF CHARLEMAGNE BLVD/DES EPINETTES AVE @ TENTH LINE RD (0014362)","col_total":3,"col_peds":0,"col_bikes":0},"geometry":{"type":"Point","coordinates":[-75.490558,45.465564]}},
 {"type":"Feature","properties":{"Location":"250 N OF KLONDIKE RD @ MARCH RD (0013528)","col_total":1,"col_peds":0,"col_bikes":0},"geometry":{"type":"Point","coordinates":[-75.934553,45.356684]}},

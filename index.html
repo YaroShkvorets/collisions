@@ -48,14 +48,14 @@
   <form>
     <h5>Year</h5>
     <div class='rounded-toggle inline'>
-      <input type='radio' name='year' id='year2014' value='year2014' checked='checked'>
+      <input type='radio' name='year' id='yearAll' value='yearAll' checked='checked'>
+      <label for='yearAll' >All</label>
+      <input type='radio' name='year' id='year2014' value='year2014' >
       <label for='year2014' >2014</label>
       <input type='radio' name='year' id='year2015' value='year2015'>
       <label for='year2015' >2015</label>
       <input type='radio' name='year' id='year2016' value='year2016'>
       <label for='year2016' >2016</label>
-      <input type='radio' name='year' id='yearAll' value='yearAll'>
-      <label for='yearAll' >All</label>
     </div><br><br>
     <h5>Collisions involving</h5>
     <div class='rounded-toggle inline'>
@@ -84,9 +84,10 @@
 
 <script>
 const years = [
+    {id:"yearAll", url: 'data/collisionsbylocationTotals.geojson', year:-1},
     {id:"year2014", url: 'data/collisionsbylocation2014.geojson', year:2014},
     {id:"year2015", url: 'data/collisionsbylocation2015.geojson', year:2015},
-    {id:"year2016", url: 'data/collisionsbylocation2016.geojson', year:2016}
+    {id:"year2016", url: 'data/collisionsbylocation2016.geojson', year:2016},
   ];
 
 
@@ -124,7 +125,8 @@ map.once('style.load', function () {
           return;
       }
       var props = features[0].properties;
-      let popup ='<h3>Collisions<br>involving</h3><hr>'
+      //let popup ='<h3>Collisions<br>involving</h3><hr>'
+      let popup ='<h3>'+props.location+'</h3><hr>'
       popup+='Drivers: '+props.col_total+'<br>'
       popup+='Pedestrians: '+props.col_peds+'<br>'
       popup+='Cyclists: '+props.col_bikes+'<br>'

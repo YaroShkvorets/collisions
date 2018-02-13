@@ -1,10 +1,12 @@
 const reader = require('geojson-writer').reader
 const writer = require('geojson-writer').writer
-//const turf = require('@turf/turf')
+const turf = require('@turf/turf')
 
 const inFiles = ['data/geojson/collisionsbylocation2014.geojson','data/geojson/collisionsbylocation2015.geojson','data/geojson/collisionsbylocation2016.geojson'];
 const outFiles = ['data/collisionsbylocation2014.geojson','data/collisionsbylocation2015.geojson','data/collisionsbylocation2016.geojson'];
 
+const outTotalsFile = 'data/collisionsbylocationTotals.geojson'
+const totals = []
 
 for (let i in inFiles){
   const inFile = inFiles[i]
@@ -25,6 +27,16 @@ for (let i in inFiles){
     delete props.BICYLCLES_IN_TOTAL
     delete props.YEAR
 
+    var obj = totals.find(function (obj) { return obj.properties.location == props.location; });
+    if(typeof obj == 'undefined'){
+      totals.push(road)
+    }
+    else{
+      obj.properties.col_total+=props.col_total
+      obj.properties.col_total+=props.col_peds
+      obj.properties.col_total+=props.col_bikes
+    }
+
   }
 
   writer(outFiles[i], roads)
@@ -32,3 +44,6 @@ for (let i in inFiles){
   console.log('Done. Written', roads.features.length, 'features')
 
 }
+
+writer(outTotalsFile, turf.featureCollection(totals))
+console.log('Total collisions:', totals.length, 'features')
