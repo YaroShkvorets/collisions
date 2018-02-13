@@ -19,6 +19,27 @@
         svg rect {
             fill: #FF0000;
         }
+        /* Dark attribution */
+
+        .mapboxgl-ctrl.mapboxgl-ctrl-attrib {
+           background: rgba(0, 0, 0, .8);
+        }
+
+        .mapboxgl-ctrl.mapboxgl-ctrl-attrib a {
+           color: #fff;
+        }
+        /* Dark popup */
+
+        .mapboxgl-popup-content {
+           background-color: #444;
+           color: #fff;
+           margin-left: 5px;
+           margin-top: 2px;
+           margin-bottom: 2px;
+           margin-right: 5px;
+           z-index: 1000;
+        }
+
     </style>
 </head>
 <body>
@@ -103,7 +124,7 @@ map.once('style.load', function () {
           return;
       }
       var props = features[0].properties;
-      let popup ='<h3>Collisions involving</h3><hr>'
+      let popup ='<h3>Collisions<br>involving</h3><hr>'
       popup+='Drivers: '+props.col_total+'<br>'
       popup+='Pedestrians: '+props.col_peds+'<br>'
       popup+='Cyclists: '+props.col_bikes+'<br>'
@@ -141,23 +162,23 @@ function init() {
             "interpolate",
             ["linear"],
             ["zoom"],
-            10, [
+            10, [                     //at min zoom
                 "interpolate",
-                ["linear"],
+                ["exponential", 0.8],
                 ["get", "col_peds"],
-                1, 1,
-                30, 4
+                1, 1,                 //1 collision = 1 pixel
+                30, 5                 //30 collisions = 5 pixels
             ],
-            17, [
+            17, [                     //at max zoom
                 "interpolate",
-                ["linear"],
+                ["exponential", 0.8],
                 ["get", "col_peds"],
-                1, 5,
-                30, 200
+                1, 8,                  //1 collision = 5 pixels
+                30, 40                 //30 collisions = 40 pixels
             ]
           ],
           'circle-opacity': 0.8,
-          'circle-blur': 0.3,
+          'circle-blur': 0.4,
 
        },
        'filter': ['>=', 'col_peds', 1]
