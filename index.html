@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset='utf-8' />
-    <title>Ottawa cycling stress map</title>
+    <title>Ottawa Collision Map</title>
     <script src='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.js'></script>
     <link href='https://api.tiles.mapbox.com/mapbox-gl-js/v0.44.0/mapbox-gl.css' rel='stylesheet' />
     <link href='https://www.mapbox.com/base/latest/base.css' rel='stylesheet' />
@@ -44,7 +44,7 @@
 </head>
 <body>
 <div id='map'></div>
-<div class = 'fill-lighten3 col3 pad1 row4 pin-right'>
+<div class = 'fill-lighten3 col3 pad2x row5 rounded-toggle pin-right'>
   <form>
     <h5>Year</h5>
     <div class='rounded-toggle inline'>
@@ -56,7 +56,7 @@
       <label for='year2015' >2015</label>
       <input type='radio' name='year' id='year2016' value='year2016'>
       <label for='year2016' >2016</label>
-    </div><br><br>
+    </div>
     <h5>Collisions involving</h5>
     <div class='rounded-toggle inline'>
       <input type='radio' name='collisions' id='col_peds' value='col_peds' checked='checked'>
@@ -66,7 +66,14 @@
       <input type='radio' name='collisions' id='col_total' value='col_total'>
       <label for='col_total' >Drivers</label>
     </div>
-
+    <h5>Range</h5>
+    <div class='rounded-toggle inline' style='height:33px'>
+      <div id='min_cols' style='width: 20px'>1</div>
+      <fieldset>
+        <input id='min_col_slider' type='range' value='1' min='1' max='7' step='1'>
+      </fieldset>
+      <div id='max_cols'>7</div>
+    </div>
   </form>
 </div>
 <div class="loader loader--style1" title="0" id="loader">
@@ -90,7 +97,7 @@ const years = [
     {id:"year2016", url: 'data/collisionsbylocation2016.geojson', year:2016},
   ];
 
-
+let activeLayer = 0
 
 mapboxgl.accessToken = 'pk.eyJ1IjoienpwdGljaGthIiwiYSI6ImNqN2FubTQ5ejBpZDAyd285MmZsdHN3d3IifQ.dc6SvmJLcl7KGPQlBYFj-g';
 const map = new mapboxgl.Map({
@@ -125,8 +132,8 @@ map.once('style.load', function () {
           return;
       }
       var props = features[0].properties;
-      //let popup ='<h3>Collisions<br>involving</h3><hr>'
-      let popup ='<h3>'+props.location+'</h3><hr>'
+      let popup ='<h3>Collisions</h3><hr>'
+      //let popup ='<h3>'+props.location+'</h3><hr>'
       popup+='Drivers: '+props.col_total+'<br>'
       popup+='Pedestrians: '+props.col_peds+'<br>'
       popup+='Cyclists: '+props.col_bikes+'<br>'
@@ -185,16 +192,36 @@ function init() {
        },
        'filter': ['>=', 'col_peds', 1]
     }, 'waterway-label');
-    map.setLayoutProperty(layer.id, 'visibility', 'none');
   })
-  map.setLayoutProperty(years[0].id, 'visibility', 'visible');
 }
 
+function updateSlider(){
+  const type = map.getFilter(years[activeLayer].id)[1]
+  const max = years[activeLayer][type]
+  document.getElementById('min_col_slider').setAttribute("max", max);
+  document.getElementById('max_cols').innerHTML = max;
+  const min = document.getElementById('min_cols').textContent
+  if(min>max) {
+    setMinColFilter(max)
+    document.getElementById('min_col_slider').setAttribute("value", max);
+  }
+}
+
+function showLayer(layerName){
+  years.forEach(function (layer, i) {
+    if(layerName==layer.id){
+      map.setLayoutProperty(layer.id, 'visibility', 'visible');
+      activeLayer = i
+      updateSlider()
+    }
+    else{
+      map.setLayoutProperty(layer.id, 'visibility', 'none');
+    }
+  });
+}
 
 function toggleLayer (checkbox) {
-  years.forEach(function (layer, i) {
-    map.setLayoutProperty(layer.id, 'visibility', checkbox.currentTarget.id==layer.id?'visible':'none');
-  });
+  showLayer(checkbox.currentTarget.id);
 }
 
 function toggleFilters (checkbox) {
@@ -212,6 +239,17 @@ function toggleFilters (checkbox) {
     radius[6][2][1] = checkbox.currentTarget.id
     map.setPaintProperty(layer.id, 'circle-radius', radius)
   });
+  updateSlider()
+}
+
+function setMinColFilter(min)
+{
+  years.forEach(function (layer, i) {
+    const filter = map.getFilter(layer.id)
+    filter[2] = min
+    map.setFilter(layer.id, filter)
+  })
+  document.getElementById('min_cols').innerHTML = min;
 }
 
 document.getElementById('year2014').onclick = toggleLayer
@@ -223,9 +261,23 @@ document.getElementById('col_peds').onclick = toggleFilters
 document.getElementById('col_total').onclick = toggleFilters
 document.getElementById('col_bikes').onclick = toggleFilters
 
+document.getElementById('min_col_slider').addEventListener('input', function(e) {
+    const min = parseInt(e.target.value, 10);
+    setMinColFilter(min)
+});
 
 map.on('load', function(e) {
-    document.getElementById("loader").style.visibility = "hidden";
+
+  years.forEach(function (layer, i) {
+    const features = map.querySourceFeatures(layer.id)
+    layer.col_peds = Math.max.apply(Math,features.map(function(o){return o.properties.col_peds;}))
+    layer.col_bikes = Math.max.apply(Math,features.map(function(o){return o.properties.col_bikes;}))
+    layer.col_total = Math.max.apply(Math,features.map(function(o){return o.properties.col_total;}))
+
+  })
+  document.getElementById("loader").style.visibility = "hidden";
+  showLayer(years[0].id)
+
 })
 
 
