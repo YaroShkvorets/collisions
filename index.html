@@ -66,7 +66,7 @@
       <input type='radio' name='collisions' id='col_total' value='col_total'>
       <label for='col_total' >Drivers</label>
     </div>
-    <h5>Range</h5>
+    <h5>Most dangerous</h5>
     <div class='rounded-toggle inline' style='height:33px'>
       <div id='min_cols' style='width: 20px'>1</div>
       <fieldset>
@@ -111,6 +111,7 @@ const map = new mapboxgl.Map({
     maxBounds: [[-76.385193,44.963826],[-75.011902,45.614998]]
 });
 
+let gPopup;
 map.once('style.load', function () {
 
     init()
@@ -132,13 +133,13 @@ map.once('style.load', function () {
           return;
       }
       var props = features[0].properties;
-      let popup ='<h3>Collisions</h3><hr>'
+      let popup ='<h3>Collisionss</h3><hr>'
       //let popup ='<h3>'+props.location+'</h3><hr>'
       popup+='Drivers: '+props.col_total+'<br>'
       popup+='Pedestrians: '+props.col_peds+'<br>'
       popup+='Cyclists: '+props.col_bikes+'<br>'
 
-      var pop = new mapboxgl.Popup()
+      gPopup = new mapboxgl.Popup()
       .setLngLat(e.lngLat)
       .setHTML(popup)
       .addTo(map)
@@ -222,6 +223,7 @@ function showLayer(layerName){
 
 function toggleLayer (checkbox) {
   showLayer(checkbox.currentTarget.id);
+  if(typeof gPopup != 'undefined') gPopup.remove()
 }
 
 function toggleFilters (checkbox) {
@@ -240,6 +242,7 @@ function toggleFilters (checkbox) {
     map.setPaintProperty(layer.id, 'circle-radius', radius)
   });
   updateSlider()
+  if(typeof gPopup != 'undefined') gPopup.remove()
 }
 
 function setMinColFilter(min)
